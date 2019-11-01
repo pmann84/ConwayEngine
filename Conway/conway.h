@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 
 struct CellInfo
 {
@@ -9,10 +10,12 @@ struct CellInfo
    unsigned int value;
 };
 
+using rule_t = std::function<bool(bool, unsigned int)>;
+
 class conway
 {
 public:
-   conway(unsigned int num_cells);
+   conway(unsigned int num_cells, rule_t birth_rule, rule_t survival_rule);
 
    void set_cells(const std::vector<CellInfo>& cells);
    unsigned int get_cell(unsigned int x, unsigned int y) const;
@@ -27,6 +30,10 @@ private:
    // we simply sway the pointers to save copying.
    std::vector<unsigned int> m_display_cells; 
    std::vector<unsigned int> m_updated_cells;
+
+   // Rules
+   rule_t m_birth_rule;
+   rule_t m_survival_rule;
 
    bool is_alive(unsigned int x, unsigned int y) const;
    unsigned int calculate_live_neighbours(unsigned int x, unsigned int y) const;

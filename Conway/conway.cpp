@@ -1,6 +1,6 @@
 #include "conway.h"
 
-conway::conway(unsigned num_cells) : m_num_cells(num_cells)
+conway::conway(unsigned num_cells, rule_t birth_rule, rule_t survival_rule) : m_num_cells(num_cells), m_birth_rule(birth_rule), m_survival_rule(survival_rule)
 {
    m_display_cells.resize(num_cells*num_cells);
    m_updated_cells.resize(num_cells*num_cells);
@@ -33,32 +33,19 @@ void conway::update()
       for (unsigned int j = 0; j < m_num_cells; ++j)
       {
          const auto num_neighbours_alive = calculate_live_neighbours(i, j);
-         if (is_alive(i, j))
+         const bool alive = is_alive(i, j);
+         if (m_birth_rule(alive, num_neighbours_alive) || m_survival_rule(alive, num_neighbours_alive))
          {
-            
-            if (num_neighbours_alive < 2 || num_neighbours_alive > 3)
-            {
-               // Any live cell with fewer than two live neighbours dies, as if by underpopulation.
-               m_updated_cells[i + m_num_cells * j] = 0;
-            }
-            else
-            {
-               // Any live cell with two or three live neighbours lives on to the next generation.
-               m_updated_cells[i + m_num_cells * j] = 1;
-            }
+            m_updated_cells[i + m_num_cells * j] = 1;
          }
          else
          {
-            // Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-            if (num_neighbours_alive == 3)
-            {
-               m_updated_cells[i + m_num_cells * j] = 1;
-            }
+            m_updated_cells[i + m_num_cells * j] = 0;
          }
       }
    }
-   // Swap the vectors around
-   m_display_cells = m_updated_cells;
+   // Swap the vectors around - This should be swap but doesnt work for some reason...
+   m_display_cells.swap(m_updated_cells);
 }
 
 bool conway::is_alive(unsigned int x, unsigned int y) const

@@ -8,5 +8,6 @@
     <ClInclude Include="conway.h" />
     <ClInclude Include="conway_generators.h" />
     <ClInclude Include="update_timer.h" />
+    <ClInclude Include="rules.h" />
   </ItemGroup>
 </Project>

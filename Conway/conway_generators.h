@@ -8,6 +8,7 @@
 // SL - Still Life
 // OS - Oscillators
 // SS - Spaceship
+// MT - Methuselahs
 // MS - Misc
 
 std::vector<CellInfo> rectangle_MS(unsigned int top_left_x, unsigned int top_left_y, unsigned int width, unsigned int height)
@@ -41,6 +42,57 @@ std::vector<CellInfo> beehive_SL(unsigned int top_left_x, unsigned int top_left_
    cells.push_back({ top_left_x + 3, top_left_y + 1, 1 });
    return cells;
 }
+
+std::vector<CellInfo> honey_farm_SL(unsigned int top_left_x, unsigned int top_left_y)
+{
+   std::vector<CellInfo> cells;
+   // Top
+   {
+      auto left_block = rectangle_MS(top_left_x + 5, top_left_y + 1, 1, 2);
+      cells.insert(cells.end(), left_block.begin(), left_block.end());
+
+      auto right_block = rectangle_MS(top_left_x + 7, top_left_y + 1, 1, 2);
+      cells.insert(cells.end(), right_block.begin(), right_block.end());
+
+      cells.push_back({ top_left_x + 6, top_left_y, 1 });
+      cells.push_back({ top_left_x + 6, top_left_y + 3, 1 });
+   }
+   // Bottom
+   {
+      auto left_block = rectangle_MS(top_left_x + 5, top_left_y + 10, 1, 2);
+      cells.insert(cells.end(), left_block.begin(), left_block.end());
+
+      auto right_block = rectangle_MS(top_left_x + 7, top_left_y + 10, 1, 2);
+      cells.insert(cells.end(), right_block.begin(), right_block.end());
+
+      cells.push_back({ top_left_x + 6, top_left_y + 9, 1 });
+      cells.push_back({ top_left_x + 6, top_left_y + 12, 1 });
+   }
+   // Left
+   {
+      auto top_block = rectangle_MS(top_left_x + 1, top_left_y + 5, 2, 1);
+      cells.insert(cells.end(), top_block.begin(), top_block.end());
+
+      auto bottom_block = rectangle_MS(top_left_x + 1, top_left_y + 7, 2, 1);
+      cells.insert(cells.end(), bottom_block.begin(), bottom_block.end());
+
+      cells.push_back({ top_left_x, top_left_y + 6, 1 });
+      cells.push_back({ top_left_x + 3, top_left_y + 6, 1 });
+   }
+   // Right
+   {
+      auto top_block = rectangle_MS(top_left_x + 10, top_left_y + 5, 2, 1);
+      cells.insert(cells.end(), top_block.begin(), top_block.end());
+
+      auto bottom_block = rectangle_MS(top_left_x + 10, top_left_y + 7, 2, 1);
+      cells.insert(cells.end(), bottom_block.begin(), bottom_block.end());
+
+      cells.push_back({ top_left_x + 9, top_left_y + 6, 1 });
+      cells.push_back({ top_left_x + 12, top_left_y + 6, 1 });
+   }
+   return cells;
+}
+
 
 std::vector<CellInfo> loaf_SL(unsigned int top_left_x, unsigned int top_left_y)
 {
@@ -210,6 +262,43 @@ std::vector<CellInfo> pulsar_OS(unsigned int top_left_x, unsigned int top_left_y
    return cells;
 }
 
+std::vector<CellInfo> pentadecathlon_OS(unsigned int top_left_x, unsigned int top_left_y)
+{
+   std::vector<CellInfo> cells;
+   auto left_block = rectangle_MS(top_left_x, top_left_y + 1, 2, 1);
+   cells.insert(cells.end(), left_block.begin(), left_block.end());
+
+   auto middle_block = rectangle_MS(top_left_x + 3, top_left_y + 1, 4, 1);
+   cells.insert(cells.end(), middle_block.begin(), middle_block.end());
+
+   auto right_block = rectangle_MS(top_left_x + 8, top_left_y + 1, 2, 1);
+   cells.insert(cells.end(), right_block.begin(), right_block.end());
+
+   cells.push_back({ top_left_x + 2, top_left_y, 1 });
+   cells.push_back({ top_left_x + 7, top_left_y, 1 });
+   cells.push_back({ top_left_x + 2, top_left_y + 2, 1 });
+   cells.push_back({ top_left_x + 7, top_left_y + 2, 1 });
+   return cells;
+}
+
+std::vector<CellInfo> koks_galaxy_OS(unsigned int top_left_x, unsigned int top_left_y)
+{
+   std::vector<CellInfo> cells;
+   auto left_block = rectangle_MS(top_left_x, top_left_y, 2, 6);
+   cells.insert(cells.end(), left_block.begin(), left_block.end());
+
+   auto top_block = rectangle_MS(top_left_x + 3, top_left_y, 6, 2);
+   cells.insert(cells.end(), top_block.begin(), top_block.end());
+
+   auto right_block = rectangle_MS(top_left_x + 7, top_left_y + 3, 2, 6);
+   cells.insert(cells.end(), right_block.begin(), right_block.end());
+
+   auto bottom_block = rectangle_MS(top_left_x, top_left_y + 7, 6, 2);
+   cells.insert(cells.end(), bottom_block.begin(), bottom_block.end());
+
+   return cells;
+}
+
 std::vector<CellInfo> gosper_gun_MS(unsigned int top_left_x, unsigned int top_left_y)
 {
    std::vector<CellInfo> cells;
@@ -217,7 +306,7 @@ std::vector<CellInfo> gosper_gun_MS(unsigned int top_left_x, unsigned int top_le
    auto first_block = block_SL(top_left_x, top_left_y + 4);
    cells.insert(cells.end(), first_block.begin(), first_block.end());
 
-   auto second_block = block_SL(top_left_x + 35, top_left_y + 2);
+   auto second_block = block_SL(top_left_x + 34, top_left_y + 2);
    cells.insert(cells.end(), second_block.begin(), second_block.end());
 
    // Add the 'tear drop' section
@@ -256,5 +345,44 @@ std::vector<CellInfo> gosper_gun_MS(unsigned int top_left_x, unsigned int top_le
    auto two_by_one_bottom = rectangle_MS(top_left_x + 24, top_left_y + 5, 1, 2);
    cells.insert(cells.end(), two_by_one_bottom.begin(), two_by_one_bottom.end());
 
+   return cells;
+}
+
+std::vector<CellInfo> rpentomino_MT(unsigned int top_left_x, unsigned int top_left_y)
+{
+   std::vector<CellInfo> cells;
+   auto centre = rectangle_MS(top_left_x + 1, top_left_y, 1, 3);
+   cells.insert(cells.end(), centre.begin(), centre.end());
+
+   cells.push_back({ top_left_x + 2, top_left_y, 1 });
+   cells.push_back({ top_left_x, top_left_y + 1, 1 });
+   return cells;
+}
+
+std::vector<CellInfo> diehard_MT(unsigned int top_left_x, unsigned int top_left_y)
+{
+   std::vector<CellInfo> cells;
+   auto bottom = rectangle_MS(top_left_x + 5, top_left_y + 2, 3, 1);
+   cells.insert(cells.end(), bottom.begin(), bottom.end());
+
+   auto top = rectangle_MS(top_left_x, top_left_y + 1, 2, 1);
+   cells.insert(cells.end(), top.begin(), top.end());
+
+   cells.push_back({ top_left_x + 1, top_left_y + 2, 1 });
+   cells.push_back({ top_left_x + 6, top_left_y, 1 });
+   return cells;
+}
+
+std::vector<CellInfo> acorn_MT(unsigned int top_left_x, unsigned int top_left_y)
+{
+   std::vector<CellInfo> cells;
+   auto line1 = rectangle_MS(top_left_x, top_left_y + 2, 2, 1);
+   cells.insert(cells.end(), line1.begin(), line1.end());
+
+   auto line2 = rectangle_MS(top_left_x + 4, top_left_y + 2, 3, 1);
+   cells.insert(cells.end(), line2.begin(), line2.end());
+
+   cells.push_back({ top_left_x + 1, top_left_y, 1 });
+   cells.push_back({ top_left_x + 3, top_left_y + 1, 1 });
    return cells;
 }

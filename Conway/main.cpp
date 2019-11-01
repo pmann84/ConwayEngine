@@ -4,9 +4,10 @@
 // TODO: Control colour of dead and alive cells
 // TODO: Output info on screen, num dead cells, alive cells etc
 // TODO: Output controls on screen
-// TODO: Event to control speed of simulation - Make this work properly
-// TODO: Display status of simulation - running or paused
-// TODO: Display speed of simulation
+// TODO: Revisit sim speed controls
+// TODO: Add restart functionality
+// TODO: Improve the format of setting starting cells, so they can be easily rotated
+
 #include <sstream>
 
 #include <SFML/Graphics.hpp>
@@ -14,8 +15,9 @@
 #include "conway.h"
 #include "conway_generators.h"
 #include "update_timer.h"
+#include "rules.h"
 
-void draw(sf::RenderWindow& window, const conway& conway, float square_size)
+void draw(sf::RenderWindow& window, const conway& conway, float square_size, sf::Color cell_colour)
 {
    sf::RectangleShape shape(sf::Vector2f(square_size, square_size));
    // x -> left to right -> j (inner) subscript
@@ -26,9 +28,12 @@ void draw(sf::RenderWindow& window, const conway& conway, float square_size)
       for (unsigned int j = 0; j < conway.num_cells(); ++j)
       {
          shape.setPosition(x, y);
-         auto shape_colour = conway.get_cell(j, i) == 0 ? sf::Color::Black : sf::Color::White;
-         shape.setFillColor(shape_colour);
-         window.draw(shape);
+         const auto cell_value = conway.get_cell(j, i);
+         if (cell_value == 1)
+         {
+            shape.setFillColor(cell_colour);
+            window.draw(shape);
+         }
          x += square_size;
       }
       y += square_size;
@@ -36,11 +41,16 @@ void draw(sf::RenderWindow& window, const conway& conway, float square_size)
    }
 }
 
-sf::Text create_game_information_text(const sf::Font& font, bool running)
+float calculate_updates_per_second(unsigned int update_interval_ms)
+{
+   return 1.0f / (static_cast<float>(update_interval_ms) / static_cast<float>(1000));
+}
+
+sf::Text create_game_information_text(const sf::Font& font, bool running, float updates_per_second)
 {
    std::stringstream ss;
-   ss << "Status: ";
-   ss << (running ? "running" : "paused");
+   ss << "Status: " << (running ? "running" : "paused") << std::endl;
+   ss << "Updates/s: " << updates_per_second << std::endl;
    
    sf::Text text;
    text.setFont(font);
@@ -51,19 +61,8 @@ sf::Text create_game_information_text(const sf::Font& font, bool running)
    return text;
 }
 
-int main()
+void setup_test_bed(conway& con)
 {
-   unsigned int screen_width = 800;
-   float square_size = 10.0f;
-   // Calculate the number of squares we need to populate the screen
-   unsigned int num_squares_per_dimension = static_cast<float>(screen_width) / square_size;
-
-   sf::RenderWindow window(sf::VideoMode(screen_width, screen_width), "Conway's Game of Life");
-   sf::RectangleShape shape(sf::Vector2f(square_size, square_size));
-
-   // Setup conway object
-   conway con(num_squares_per_dimension);
-
    std::vector<CellInfo> block = block_SL(10, 10);
    con.set_cells(block);
 
@@ -91,16 +90,65 @@ int main()
    std::vector<CellInfo> pulsar = pulsar_OS(40, 20);
    con.set_cells(pulsar);
 
-   //std::vector<CellInfo> gosper_gun = gosper_gun_MS(10, 10);
+   std::vector<CellInfo> penta = pentadecathlon_OS(10, 40);
+   con.set_cells(penta);
+
+   std::vector<CellInfo> honeyfarm = honey_farm_SL(30, 40);
+   con.set_cells(honeyfarm);
+
+   std::vector<CellInfo> galaxy = koks_galaxy_OS(60, 40);
+   con.set_cells(galaxy);
+}
+
+struct colour_scheme
+{
+   sf::Color background = sf::Color::Black;
+   sf::Color cell = sf::Color::White;
+};
+
+int main()
+{
+   unsigned int screen_width = 800;
+   float square_size = 5.0f;
+   // Calculate the number of squares we need to populate the screen
+   unsigned int num_squares_per_dimension = static_cast<float>(screen_width) / square_size;
+
+   // Create colour scheme
+   colour_scheme cs;
+
+   // Create the window
+   sf::RenderWindow window(sf::VideoMode(screen_width, screen_width), "Conway's Game of Life");
+   // Clear to background colour
+   window.clear(cs.background);
+
+   // Set up cell shape
+   sf::RectangleShape shape(sf::Vector2f(square_size, square_size));
+
+   // Setup conway object
+   conway con(num_squares_per_dimension, conway_birth_rule, conway_survival_rule);
+
+   // Test scene
+   //setup_test_bed(con);
+
+   auto init_mt = acorn_MT(50, 40);
+   con.set_cells(init_mt);
+
+   auto init_mt2 = rpentomino_MT(40, 30);
+   con.set_cells(init_mt2);
+
+   //std::vector<CellInfo> gosper_gun = gosper_gun_MS(100, 100);
    //con.set_cells(gosper_gun);
 
+   //std::vector<CellInfo> gosper_gun2 = gosper_gun_MS(10, 10);
+   //con.set_cells(gosper_gun2);
+
    // Timer stuff
-   unsigned int update_interval_ms = 100;
+   unsigned int update_interval_ms = 50;
    update_timer timer(update_interval_ms);
 
    // Game control stuff
    bool paused = true;
-   unsigned int update_interval_increment_ms = 5;
+   unsigned int update_interval_increment_ms = 10;
 
    // Overlay stuff
    sf::Font overlay_font;
@@ -108,7 +156,7 @@ int main()
    {
       throw std::runtime_error("Failed to load font!");
    }
-   sf::Text game_text = create_game_information_text(overlay_font, !paused);
+   sf::Text game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
 
    // Main simulation/render loop
    while (window.isOpen())
@@ -123,15 +171,17 @@ int main()
          if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
          {
             paused = !paused;
-            game_text = create_game_information_text(overlay_font, !paused);
+            game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
          }
          if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Left)
          {
             timer.update_interval_ms(timer.update_interval_ms() + update_interval_increment_ms);
+            game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
          }
          if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Right)
          {
             timer.update_interval_ms(timer.update_interval_ms() - update_interval_increment_ms);
+            game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
          }
       }
 
@@ -146,7 +196,7 @@ int main()
       // Clear the screen
       window.clear();
       // Draw life
-      draw(window, con, square_size);
+      draw(window, con, square_size, cs.cell);
       // Draw Overlay
       window.draw(game_text);
       window.display();

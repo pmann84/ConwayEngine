@@ -14,8 +14,8 @@ public:
 
    void update_interval_ms(unsigned int update_interval_ms)
    { 
-      unsigned int high = 200000;
-      unsigned int low = 20;
+      unsigned int high = 200000000;
+      unsigned int low = 10;
       m_update_interval_ms = (update_interval_ms < low) ? low : (high < update_interval_ms) ? high : update_interval_ms;
    }
 

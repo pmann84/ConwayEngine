@@ -82,6 +82,7 @@
   <ItemGroup>
     <ClInclude Include="conway.h" />
     <ClInclude Include="conway_generators.h" />
+    <ClInclude Include="rules.h" />
     <ClInclude Include="update_timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

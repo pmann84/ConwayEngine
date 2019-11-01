@@ -17,5 +17,5 @@ Uses SFML to display the simulation.
 - Optimise the simulation (storage of data, parallelism, etc)
 
 ## Reading
-You can read the blog posts I have made about this when I have been writing it at my blog site [constreference](https://constreference.wordpress.com)
+You can read the blog posts I have made about this as I have been developing it at my blog site [constreference](https://constreference.wordpress.com)
 

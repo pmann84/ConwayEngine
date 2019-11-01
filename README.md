@@ -15,3 +15,7 @@ Uses SFML to display the simulation.
 - Better SFML implementation/graphical support
 - Move conway specific stuff into its own library
 - Optimise the simulation (storage of data, parallelism, etc)
+
+## Reading
+You can read the blog posts I have made about this when I have been writing it at my blog site [constreference](https://constreference.wordpress.com)
+

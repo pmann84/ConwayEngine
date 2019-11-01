@@ -3,10 +3,9 @@
 // TODO: Ability to use precanned conway generators at certain positions
 // TODO: Control colour of dead and alive cells
 // TODO: Output info on screen, num dead cells, alive cells etc
-// TODO: Output controls on screen
 // TODO: Revisit sim speed controls
-// TODO: Add restart functionality
 // TODO: Improve the format of setting starting cells, so they can be easily rotated
+// TODO: Add generation count
 
 #include <sstream>
 
@@ -46,19 +45,41 @@ float calculate_updates_per_second(unsigned int update_interval_ms)
    return 1.0f / (static_cast<float>(update_interval_ms) / static_cast<float>(1000));
 }
 
-sf::Text create_game_information_text(const sf::Font& font, bool running, float updates_per_second)
+struct game_info
 {
-   std::stringstream ss;
-   ss << "Status: " << (running ? "running" : "paused") << std::endl;
-   ss << "Updates/s: " << updates_per_second << std::endl;
-   
+   bool running;
+   float updates_per_second;
+   unsigned int generation_count;
+};
+
+sf::Text createText(const std::string& str, const sf::Font& font, unsigned int size, sf::Vector2f position, sf::Color colour)
+{
    sf::Text text;
    text.setFont(font);
-   text.setString(ss.str());
-   text.setFillColor(sf::Color::White);
-   text.setPosition(10.0f, 5.0f);
-   text.setCharacterSize(16);
+   text.setString(str);
+   text.setFillColor(colour);
+   text.setPosition(position.x, position.y);
+   text.setCharacterSize(size);
    return text;
+}
+
+sf::Text create_game_information_text(sf::Vector2f position, const sf::Font& font, game_info info)
+{
+   std::stringstream ss;
+   ss << "Status: " << (info.running ? "running" : "paused") << std::endl;
+   ss << "Updates/s: " << info.updates_per_second << std::endl;
+   ss << "Generation: " << info.generation_count << std::endl;
+   return createText(ss.str(), font, 16, position, sf::Color::White);
+}
+
+sf::Text create_game_settings_text(sf::Vector2f position, const sf::Font& font)
+{
+   std::stringstream ss;
+   ss << "[Space] Pause/Resume" << std::endl;
+   ss << " [Left] Decrease Speed" << std::endl;
+   ss << "[Right] Increase Speed" << std::endl;
+   ss << "    [R] Restart" << std::endl;
+   return createText(ss.str(), font, 16, position, sf::Color::White);
 }
 
 void setup_test_bed(conway& con)
@@ -126,14 +147,15 @@ int main()
 
    // Setup conway object
    conway con(num_squares_per_dimension, conway_birth_rule, conway_survival_rule);
+   //conway con(num_squares_per_dimension, highlife_birth_rule, highlife_survival_rule);
 
    // Test scene
    //setup_test_bed(con);
 
-   auto init_mt = acorn_MT(50, 40);
+   auto init_mt = acorn_MT(70, 70);
    con.set_cells(init_mt);
 
-   auto init_mt2 = rpentomino_MT(40, 30);
+   auto init_mt2 = rpentomino_MT(90, 90);
    con.set_cells(init_mt2);
 
    //std::vector<CellInfo> gosper_gun = gosper_gun_MS(100, 100);
@@ -147,8 +169,7 @@ int main()
    update_timer timer(update_interval_ms);
 
    // Game control stuff
-   bool paused = true;
-   unsigned int update_interval_increment_ms = 10;
+   unsigned int update_interval_increment_ms = 5;
 
    // Overlay stuff
    sf::Font overlay_font;
@@ -156,7 +177,15 @@ int main()
    {
       throw std::runtime_error("Failed to load font!");
    }
-   sf::Text game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
+   game_info info
+   {
+      false,
+      calculate_updates_per_second(timer.update_interval_ms()),
+      con.generation_count()
+   };
+   sf::Vector2f game_info_txt_pos = { 10.0f, 5.0f };
+   sf::Text game_text = create_game_information_text(game_info_txt_pos, overlay_font, info);
+   sf::Text settings_text = create_game_settings_text({ static_cast<float>(screen_width - 190), 5.0f }, overlay_font);
 
    // Main simulation/render loop
    while (window.isOpen())
@@ -170,28 +199,40 @@ int main()
          }
          if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Space)
          {
-            paused = !paused;
-            game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
+            info.running = !info.running;
+            info.updates_per_second = calculate_updates_per_second(timer.update_interval_ms());
+            game_text = create_game_information_text(game_info_txt_pos, overlay_font, info);
          }
          if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Left)
          {
             timer.update_interval_ms(timer.update_interval_ms() + update_interval_increment_ms);
-            game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
+            info.updates_per_second = calculate_updates_per_second(timer.update_interval_ms());
+            game_text = create_game_information_text(game_info_txt_pos, overlay_font, info);
          }
          if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Right)
          {
             timer.update_interval_ms(timer.update_interval_ms() - update_interval_increment_ms);
-            game_text = create_game_information_text(overlay_font, !paused, calculate_updates_per_second(timer.update_interval_ms()));
+            info.updates_per_second = calculate_updates_per_second(timer.update_interval_ms());
+            game_text = create_game_information_text(game_info_txt_pos, overlay_font, info);
+         }
+         if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::R)
+         {
+            con.restart();
+            info.generation_count = con.generation_count();
+            game_text = create_game_information_text(game_info_txt_pos, overlay_font, info);
          }
       }
 
       // Only want to advance the conway simulation at regular intervals
-      while (!paused && timer.can_update())
+      while (info.running && timer.can_update())
       {
          // Advance the conway simulation
          con.update();
          // Restart the timer
          timer.restart();
+         // Update the game info
+         info.generation_count = con.generation_count();
+         game_text = create_game_information_text(game_info_txt_pos, overlay_font, info);
       }
       // Clear the screen
       window.clear();
@@ -199,6 +240,7 @@ int main()
       draw(window, con, square_size, cs.cell);
       // Draw Overlay
       window.draw(game_text);
+      window.draw(settings_text);
       window.display();
    }
 }

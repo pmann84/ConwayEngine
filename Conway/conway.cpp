@@ -1,9 +1,14 @@
 #include "conway.h"
 
-conway::conway(unsigned num_cells, rule_t birth_rule, rule_t survival_rule) : m_num_cells(num_cells), m_birth_rule(birth_rule), m_survival_rule(survival_rule)
+conway::conway(unsigned num_cells, rule_t birth_rule, rule_t survival_rule) 
+   : m_num_cells(num_cells)
+   , m_birth_rule(birth_rule)
+   , m_survival_rule(survival_rule)
+   , m_generation_count(0)
 {
    m_display_cells.resize(num_cells*num_cells);
    m_updated_cells.resize(num_cells*num_cells);
+   m_initial_cells.resize(num_cells*num_cells);
 }
 
 void conway::set_cells(const std::vector<CellInfo>& cells)
@@ -11,6 +16,7 @@ void conway::set_cells(const std::vector<CellInfo>& cells)
    for (const auto& cell : cells)
    {
       m_display_cells[cell.x + m_num_cells * cell.y] = cell.value > 0 ? 1 : 0;
+      m_initial_cells[cell.x + m_num_cells * cell.y] = cell.value > 0 ? 1 : 0;
    }
 }
 
@@ -23,6 +29,12 @@ unsigned conway::num_cells() const
 {
    return m_num_cells;
 }
+
+unsigned conway::generation_count() const
+{
+   return m_generation_count;
+}
+
 
 void conway::update()
 {
@@ -46,6 +58,22 @@ void conway::update()
    }
    // Swap the vectors around - This should be swap but doesnt work for some reason...
    m_display_cells.swap(m_updated_cells);
+   // Update the generation count
+   m_generation_count++;
+}
+
+void conway::clear()
+{
+   std::fill(m_display_cells.begin(), m_display_cells.end(), 0);
+   std::fill(m_updated_cells.begin(), m_updated_cells.end(), 0);
+   std::fill(m_initial_cells.begin(), m_initial_cells.end(), 0);
+}
+
+void conway::restart()
+{
+   std::fill(m_updated_cells.begin(), m_updated_cells.end(), 0);
+   m_display_cells = m_initial_cells;
+   m_generation_count = 0;
 }
 
 bool conway::is_alive(unsigned int x, unsigned int y) const
